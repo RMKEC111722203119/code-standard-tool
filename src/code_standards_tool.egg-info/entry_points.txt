@@ -1,0 +1,2 @@
+[console_scripts]
+codestandards = code_standards.cli:main

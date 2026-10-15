@@ -1,0 +1,12 @@
+[build-system]
+requires=["setuptools>=75"]
+build-backend="setuptools.build_meta"
+[project]
+name="code-standards-tool"
+version="1.1.0"
+requires-python=">=3.11"
+dependencies=["fastapi==0.119.0","uvicorn[standard]==0.37.0","pydantic==2.12.3","PyYAML==6.0.3","httpx==0.28.1","openpyxl==3.1.5","azure-identity==1.25.1","azure-storage-blob==12.27.0"]
+[project.scripts]
+codestandards="code_standards.cli:main"
+[tool.setuptools.packages.find]
+where=["src"]

@@ -1,0 +1,16 @@
+application:
+  public_base_url: "http://localhost:8000"
+  work_root: "./data/workspaces"
+checks_repository:
+  url: "https://github.com/ORG/checks-repo.git"
+execution:
+  maximum_parallel_tests: 4
+  git_timeout_seconds: 300
+  default_test_timeout_seconds: 300
+storage:
+  account_url: "https://YOUR_ACCOUNT.blob.core.windows.net"
+  container: "code-standards-results"
+reports:
+  excel_rows_per_sheet: 900000
+  excel_findings_per_file: 1800000
+  json_findings_per_file: 250000

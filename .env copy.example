@@ -1,0 +1,7 @@
+CSTOOL_PUBLIC_BASE_URL=http://localhost:8000
+CSTOOL_CHECKS_REPOSITORY_URL=https://github.com/ORG/checks-repo.git
+CSTOOL_WORK_ROOT=./data/workspaces
+CSTOOL_MAX_PARALLEL_TESTS=4
+CSTOOL_GIT_TOKEN=
+CSTOOL_AZURE_ACCOUNT_URL=https://YOUR_ACCOUNT.blob.core.windows.net
+CSTOOL_AZURE_CONTAINER=code-standards-results
