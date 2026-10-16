@@ -7,6 +7,7 @@ from .config import load_settings
 from .blob import BlobStore
 from .models import RunRequest,RunResponse
 from .orchestrator import Orchestrator
+from .utils import debug
 app=FastAPI(title="Code Standards Tool",version=__version__)
 @lru_cache
 def settings(): return load_settings()
@@ -14,12 +15,19 @@ def settings(): return load_settings()
 def health(): return {"status":"healthy","version":__version__}
 @app.get("/v1/checks")
 async def list_checks(branch:str=Query("main")):
+    debug(f"GET /v1/checks received branch={branch!r}")
     try:return await asyncio.to_thread(Orchestrator(settings()).list_checks,branch)
-    except Exception as e:raise HTTPException(400,str(e))
+    except Exception as e:
+        debug(f"GET /v1/checks failed error={e!r}")
+        raise HTTPException(400,str(e)) from e
 @app.post("/v1/runs",response_model=RunResponse)
 async def run(request:RunRequest):
+    debug(f"POST /v1/runs received application_branch={request.application_branch!r} checks_branch={request.checks_branch!r} include_tests={request.include_tests} include_paths={len(request.include_paths)}")
     try:return await asyncio.to_thread(Orchestrator(settings()).run,request)
-    except Exception as e:raise HTTPException(500,str(e))
+    except Exception as e:
+        debug(f"POST /v1/runs failed error={e!r}")
+        import traceback; traceback.print_exc()
+        raise HTTPException(500,str(e)) from e
 def part(index,kind,n):
     for x in index.get(f"{kind}_reports",[]):
         if x["part"]==n:return x

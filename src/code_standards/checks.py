@@ -1,14 +1,21 @@
 import fnmatch,yaml
 from pathlib import Path
 from .models import TestManifest
-from .utils import ToolError,run_git
+from .utils import ToolError,run_git,debug
 REQ={"test_id","test_name","test_version","description","entrypoint","severity","confidence","category","supported_extensions","timeout_seconds","enabled_by_default","parameters"}
 def clone_repository(url,branch,dest,timeout,token,commit=None):
+    debug(f"clone start branch={branch!r} destination={dest} commit_requested={bool(commit)}")
     run_git(["clone","--quiet","--single-branch","--branch",branch,"--",url,str(dest)],timeout,token)
+    debug("clone command completed")
     if commit:
+        debug(f"requested commit checkout started destination={dest}")
         resolved=run_git(["rev-parse","--verify",f"{commit}^{{commit}}"],timeout,token,dest); run_git(["merge-base","--is-ancestor",resolved,f"origin/{branch}"],timeout,token,dest); run_git(["checkout","--quiet","--detach",resolved],timeout,token,dest)
-    return run_git(["rev-parse","HEAD"],timeout,token,dest)
+        debug(f"requested commit checkout completed resolved={resolved}")
+    result=run_git(["rev-parse","HEAD"],timeout,token,dest)
+    debug(f"clone completed commit={result}")
+    return result
 def discover_manifests(root):
+    debug(f"manifest discovery started root={root}")
     out=[]; ids=set()
     for p in sorted((root/"checks").rglob("test.yml")):
         d=yaml.safe_load(p.read_text()); missing=REQ-set(d or {})
@@ -17,9 +24,11 @@ def discover_manifests(root):
         ids.add(d["test_id"]); ep=(p.parent/d["entrypoint"]).resolve()
         if p.parent.resolve() not in ep.parents or not ep.is_file(): raise ToolError(f"Bad entrypoint in {p}")
         out.append(TestManifest(**d,folder=p.parent.relative_to(root/"checks").as_posix(),manifest_path=p.relative_to(root).as_posix()))
+    debug(f"manifest discovery completed count={len(out)}")
     return out
 def fmatch(folder,patterns): return any(folder==x or folder.startswith(x.rstrip("/")+"/") or fnmatch.fnmatch(folder,x) for x in patterns)
 def select_tests(ms,r):
+    debug(f"test selection started available={len(ms)} include={r.include_tests} exclude={r.exclude_tests}")
     ids={m.test_id for m in ms}; missing=(set(r.include_tests)|set(r.exclude_tests)|set(r.required_tests)|set(r.test_parameters))-ids
     if missing: raise ToolError(f"Unknown tests: {sorted(missing)}")
     opt=bool(r.include_tests or r.include_folders); out=[]
@@ -28,6 +37,7 @@ def select_tests(ms,r):
         exc=m.test_id in r.exclude_tests or fmatch(m.folder,r.exclude_folders)
         if inc and not exc: out.append(m)
     if not out: raise ToolError("No tests selected")
+    debug(f"test selection completed selected={[m.test_id for m in out]}")
     return out
 def merge(a,b):
     z=dict(a)
