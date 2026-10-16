@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from .utils import debug
 
 
 @dataclass(frozen=True)
@@ -24,17 +25,21 @@ class Settings:
 
 
 def required_environment(name: str) -> str:
+    debug(f"environment lookup started name={name}")
     value = os.getenv(name, "").strip()
 
     if not value:
+        debug(f"environment lookup failed name={name}")
         raise RuntimeError(
             f"Required environment variable is not set: {name}"
         )
 
+    debug(f"environment lookup completed name={name}")
     return value
 
 
 def positive_integer(name: str, default: int) -> int:
+    debug(f"integer setting lookup started name={name} default={default}")
     raw_value = os.getenv(name, str(default))
 
     try:
@@ -49,11 +54,13 @@ def positive_integer(name: str, default: int) -> int:
             f"{name} must be greater than zero"
         )
 
+    debug(f"integer setting lookup completed name={name} value={value}")
     return value
 
 
 def load_settings() -> Settings:
-    return Settings(
+    debug("settings load started")
+    value=Settings(
         public_base_url=os.getenv(
             "CSTOOL_PUBLIC_BASE_URL",
             "http://localhost:8000",
@@ -114,3 +121,5 @@ def load_settings() -> Settings:
 
         git_token=os.getenv("CSTOOL_GIT_TOKEN") or None,
     )
+    debug(f"settings loaded work_root={value.work_root} max_parallel={value.maximum_parallel_tests} git_token_configured={bool(value.git_token)}")
+    return value
